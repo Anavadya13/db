@@ -1,0 +1,135 @@
+SELECT COUNT(*)
+FROM CUSTOMER
+WHERE Grade > (
+    SELECT AVG(Grade) 
+    FROM CUSTOMER
+    WHERE City = 'Bangalore'
+);
+
+
+Find the name and numbers of all salesmen who had more than one customer
+We need to find salesmen who have more than one customer, and to do this, we can use a GROUP BY on the Salesman_id and HAVING to filter those with more than one customer.
+
+SQL Query:
+sql
+Copy code
+SELECT S.Name, COUNT(C.Customer_id) AS Num_Customers
+FROM SALESMAN S
+JOIN CUSTOMER C ON S.Salesman_id = C.Salesman_id
+GROUP BY S.Salesman_id
+HAVING COUNT(C.Customer_id) > 1;
+
+
+
+
+List all salesmen and indicate those who have and don’t have customers in their cities
+To achieve this, we need to:
+
+Check which salesmen have customers in their cities.
+List all salesmen, marking those who have customers and those who do not.
+SQL Query:
+sql
+Copy code
+SELECT S.Name, 
+       CASE 
+         WHEN EXISTS (
+           SELECT 1 
+           FROM CUSTOMER C 
+           WHERE S.Salesman_id = C.Salesman_id 
+           AND S.City = C.City
+         ) THEN 'Has Customers'
+         ELSE 'No Customers'
+       END AS Customer_Status
+FROM SALESMAN S;
+
+
+ Create a view that finds the salesman who has the customer with the highest order of a day
+To create this view, we will first find the customer with the highest order amount for each day and then select the corresponding salesman.
+
+SQL Query to Create the View:
+sql
+Copy code
+CREATE VIEW HighestOrderSalesman AS
+SELECT O.Ord_Date, S.Name AS Salesman_Name, C.Cust_Name AS Customer_Name, O.Purchase_Amt
+FROM ORDERS O
+JOIN SALESMAN S ON O.Salesman_id = S.Salesman_id
+JOIN CUSTOMER C ON O.Customer_id = C.Customer_id
+WHERE O.Purchase_Amt = (
+    SELECT MAX(Purchase_Amt)
+    FROM ORDERS
+    WHERE Ord_Date = O.Ord_Date
+);
+
+
+Make a list of all project numbers for projects that involve an employee whose last name is ‘Scott’, either as a worker or as a manager of the department that controls the project.
+This query requires us to find the project numbers (PNo) for projects where either:
+
+An employee with the last name "Scott" is working on the project.
+The department manager of the project is "Scott".
+SQL Query:
+sql
+Copy code
+SELECT DISTINCT P.PNo
+FROM PROJECT P
+JOIN WORKS_ON W ON P.PNo = W.PNo
+JOIN EMPLOYEE E ON W.SSN = E.SSN
+WHERE E.Name LIKE '%Scott'
+UNION
+SELECT DISTINCT P.PNo
+FROM PROJECT P
+JOIN DEPARTMENT D ON P.DNo = D.DNo
+JOIN EMPLOYEE E ON D.MgrSSN = E.SSN
+WHERE E.Name LIKE '%Scott';
+
+
+
+
+Show the resulting salaries if every employee working on the ‘IoT’ project is given a 10 percent raise.
+To solve this, we need to find employees working on the 'IoT' project, calculate their new salary with a 10% raise, and display the results.
+
+SQL Query:
+sql
+Copy code
+SELECT E.Name, E.Salary AS Current_Salary, E.Salary * 1.10 AS New_Salary
+FROM EMPLOYEE E
+JOIN WORKS_ON W ON E.SSN = W.SSN
+JOIN PROJECT P ON W.PNo = P.PNo
+WHERE P.PName = 'IoT';
+
+
+ Find the sum of the salaries of all employees of the ‘Accounts’ department, as well as the maximum salary, the minimum salary, and the average salary in this department.
+To achieve this, we need to first join the EMPLOYEE and DEPARTMENT tables, filter for the "Accounts" department, and then apply aggregate functions to calculate the required values.
+
+SQL Query:
+sql
+Copy code
+SELECT SUM(E.Salary) AS Total_Salary,
+       MAX(E.Salary) AS Max_Salary,
+       MIN(E.Salary) AS Min_Salary,
+       AVG(E.Salary) AS Avg_Salary
+FROM EMPLOYEE E
+JOIN DEPARTMENT D ON E.DNo = D.DNo
+WHERE D.DName = 'Accounts';
+
+
+Retrieve the name of each employee who works on all the projects controlled by department number 5 (use NOT EXISTS operator).
+This query requires finding employees who work on all projects managed by department 5. To do this, we'll compare the list of projects controlled by department 5 with the projects each employee works on.
+
+SQL Query:
+sql
+Copy code
+SELECT E.Name
+FROM EMPLOYEE E
+WHERE NOT EXISTS (
+    SELECT P.PNo
+    FROM PROJECT P
+    WHERE P.DNo = 5
+    AND NOT EXISTS (
+        SELECT W.PNo
+        FROM WORKS_ON W
+        WHERE W.SSN = E.SSN
+        AND W.PNo = P.PNo
+    )
+);
+
+
