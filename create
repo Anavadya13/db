@@ -1,0 +1,77 @@
+CREATE TABLE Student (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(50),
+    marks INT,
+    category VARCHAR(20),
+    district VARCHAR(50),
+    state VARCHAR(50)
+);
+
+CREATE TABLE Student_rank (
+    roll_no INT PRIMARY KEY,
+    marks INT,
+    rank INT,
+    FOREIGN KEY (roll_no) REFERENCES Student(roll_no)
+);
+
+
+
+
+.....
+
+
+-- Inserting data into Student table
+INSERT INTO Student (roll_no, name, marks, category, district, state) VALUES
+(1, 'Rahul', 500, 'General', 'Chennai', 'Tamilnadu'),
+(2, 'Sita', 450, 'OBC', 'Hyderabad', 'Telangana'),
+(3, 'Amit', 470, 'SC', 'Vishakapatnam', 'Andhra Pradesh'),
+(4, 'Lakshmi', 480, 'General', 'Coimbatore', 'Tamilnadu'),
+(5, 'Ravi', 430, 'OBC', 'Vijayawada', 'Andhra Pradesh'),
+(6, 'Maya', 520, 'ST', 'Madurai', 'Tamilnadu'),
+(7, 'John', 410, 'General', 'Chennai', 'Tamilnadu'),
+(8, 'Krishna', 460, 'OBC', 'Warangal', 'Telangana');
+
+-- Inserting data into Student_rank table
+INSERT INTO Student_rank (roll_no, marks, rank) VALUES
+(1, 500, 80),
+(2, 450, 150),
+(3, 470, 55),
+(4, 480, 120),
+(5, 430, 60),
+(6, 520, 40),
+(7, 410, 200),
+(8, 460, 110);
+
+
+
+....
+
+(i) List all students who are from Tamilnadu state and secured a rank above 100
+sql
+Copy code
+SELECT s.name, sr.rank
+FROM Student s
+JOIN Student_rank sr ON s.roll_no = sr.roll_no
+WHERE s.state = 'Tamilnadu' AND sr.rank > 100;
+(ii) List the names of all students in ascending order who are from Andhra Pradesh state, belong to a given category, and have secured a rank above 50
+You need to replace 'OBC' with the specific category you want.
+
+sql
+Copy code
+SELECT s.name, sr.rank
+FROM Student s
+JOIN Student_rank sr ON s.roll_no = sr.roll_no
+WHERE s.state = 'Andhra Pradesh' AND s.category = 'OBC' AND sr.rank > 50
+ORDER BY s.name ASC;
+(iii) Create a view of all students with their name, category, district, and rank
+sql
+Copy code
+CREATE VIEW Student_Details_View AS
+SELECT s.name, s.category, s.district, sr.rank
+FROM Student s
+JOIN Student_rank sr ON s.roll_no = sr.roll_no;
+You can now query this view as:
+
+sql
+Copy code
+SELECT * FROM Student_Details_View;
