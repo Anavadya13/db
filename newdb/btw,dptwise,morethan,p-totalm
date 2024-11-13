@@ -104,3 +104,154 @@ END;
 
 
 This procedure calculates and displays the total marks for a given roll number in the student table. Adjust the rollno in the execution block as needed.
+..........................
+ALGO
+Schema Setup
+Create dept Table:
+
+Define deptno as the primary key.
+Add dname (department name) and loc (location) columns.
+Create emp Table:
+
+Define empno as the primary key.
+Add columns: ename (employee name), job, mgr (manager ID), hiredate, sal (salary), comm (commission), and deptno.
+Define a foreign key on deptno that references the deptno in the dept table.
+Query (a): List employees with a salary between 50,000 and 1,00,000.
+Objective: Retrieve the names and salaries of employees whose salary is in the specified range.
+
+Algorithm
+Filter Salary Range:
+Use the WHERE clause to filter employees where sal is between 50000 and 100000.
+Select Required Columns:
+Select ename and sal for each employee who meets the salary range criteria.
+SQL Query
+sql
+Copy code
+SELECT ename, sal
+FROM emp
+WHERE sal BETWEEN 50000 AND 100000;
+Query (b): List employee names and their annual salary department-wise.
+Objective: Display department-wise employee names and their annual salary.
+
+Algorithm
+Join emp and dept Tables:
+
+Use deptno to join emp and dept tables to access department names for each employee.
+Calculate Annual Salary:
+
+Multiply each employee’s monthly sal by 12 to get their annual salary.
+Order by Department Name:
+
+Sort results by dname (department name) for department-wise listing.
+Select Required Columns:
+
+Select dname (department), ename (employee name), and annual_salary.
+SQL Query
+sql
+Copy code
+SELECT d.dname AS department, e.ename AS employee_name, (e.sal * 12) AS annual_salary
+FROM emp e
+JOIN dept d ON e.deptno = d.deptno
+ORDER BY d.dname;
+Query (c): List employees whose salary is less than their manager's but more than other managers.
+Objective: Retrieve employees whose salary is less than their immediate manager’s salary but greater than the salary of all other managers.
+
+Algorithm
+Self-Join emp Table to Compare with Managers:
+
+Use a self-join on emp to match each employee (e1) with their manager (e2) based on mgr (manager ID).
+Filter by Salary Comparison:
+
+Use WHERE clause to specify:
+e1.sal < e2.sal (employee salary is less than their manager's salary).
+e1.sal > ALL (subquery for salaries of other managers, excluding the manager of e1).
+Subquery to Get Salaries of Other Managers:
+
+The subquery selects salaries of all managers except the current manager of the employee.
+Select Required Columns:
+
+Select ename of the employee, sal of the employee, ename of the manager, and sal of the manager.
+SQL Query
+sql
+Copy code
+SELECT e1.ename AS employee, e1.sal AS employee_salary, e2.ename AS manager, e2.sal AS manager_salary
+FROM emp e1
+JOIN emp e2 ON e1.mgr = e2.empno
+WHERE e1.sal < e2.sal
+AND e1.sal > ALL (
+    SELECT sal
+    FROM emp
+    WHERE job = 'Manager' AND empno != e2.empno
+);
+Query (d): List department number, name, job, salary, and total salary (salary + commission) of salesmen.
+Objective: Retrieve details of employees whose job is "Salesman," including their total salary (salary + commission).
+
+Algorithm
+Filter by Job Title:
+
+Use WHERE clause to filter employees with job = 'Salesman'.
+Calculate Total Salary:
+
+Use sal + COALESCE(comm, 0) to add comm (commission) to sal (salary).
+Use COALESCE to handle cases where comm might be NULL (interpreted as 0).
+Select Required Columns:
+
+Select deptno, ename, job, sal, and total_salary (salary + commission).
+SQL Query
+sql
+Copy code
+SELECT e.deptno, e.ename, e.job, e.sal, (e.sal + COALESCE(e.comm, 0)) AS total_salary
+FROM emp e
+WHERE e.job = 'Salesman';
+Query (e): PL/SQL Procedure to find total marks of 5 subjects and search for a specific Rollno.
+Objective: Write a PL/SQL procedure that calculates the total marks for a student given a roll number and displays it. If the roll number does not exist, display an error message.
+
+Algorithm
+Define Input Parameter (p_rollno):
+
+Accept p_rollno (roll number) as input for the procedure.
+Calculate Total Marks:
+
+Use a SELECT INTO statement to compute the sum of marks (subject1 + subject2 + subject3 + subject4 + subject5) from the student table for the given rollno.
+Handle Exception for Missing Roll Number:
+
+Use EXCEPTION handling with NO_DATA_FOUND to display a message if p_rollno is not found in the student table.
+Display Result:
+
+Use DBMS_OUTPUT.PUT_LINE to print the total marks if the roll number exists.
+SQL Setup for student Table
+sql
+Copy code
+CREATE TABLE student (
+    rollno INT PRIMARY KEY,
+    name VARCHAR(50),
+    subject1 INT,
+    subject2 INT,
+    subject3 INT,
+    subject4 INT,
+    subject5 INT
+);
+PL/SQL Procedure
+sql
+Copy code
+CREATE OR REPLACE PROCEDURE get_total_marks(p_rollno IN INT) IS
+    total_marks INT;
+BEGIN
+    -- Calculate total marks for the given roll number
+    SELECT (subject1 + subject2 + subject3 + subject4 + subject5) INTO total_marks
+    FROM student
+    WHERE rollno = p_rollno;
+    
+    -- Display total marks
+    DBMS_OUTPUT.PUT_LINE('Total Marks for Roll No ' || p_rollno || ' is: ' || total_marks);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        -- Display error if roll number not found
+        DBMS_OUTPUT.PUT_LINE('No record found for Roll No ' || p_rollno);
+END;
+Execute the Procedure
+sql
+Copy code
+BEGIN
+    get_total_marks(101); -- Replace 101 with the desired Rollno
+END;
