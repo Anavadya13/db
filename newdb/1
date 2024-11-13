@@ -1,0 +1,91 @@
+Given Tables
+SALARIEDWORKER Table:
+Fields: WORKERID, NAME, SALARY, TAX, RETIRES (default value is N)
+ADDRESS Table:
+Fields: WORKERID, STREET, CITY, PIN
+Tasks
+a) PL/SQL Program to Calculate and Update Tax Using a Cursor
+Conditions for Tax Calculation:
+
+Salary Range 0 - 5000: No tax
+Salary up to 8000: 5% tax
+Salary up to 10000: 10% tax
+Salary above 10000: 15% tax
+Algorithm for Tax Calculation Program:
+
+Declare a cursor to select WORKERID and SALARY from the SALARIEDWORKER table.
+For each row fetched by the cursor:
+Check the SALARY value and calculate the TAX based on the given conditions:
+If SALARY <= 5000, set TAX to 0.
+If SALARY <= 8000, set TAX to 5% of SALARY.
+If SALARY <= 10000, set TAX to 10% of SALARY.
+If SALARY > 10000, set TAX to 15% of SALARY.
+Update the TAX column for each worker with the calculated tax amount.
+Close the cursor.
+PL/SQL Code:
+
+sql
+Copy code
+DECLARE
+    CURSOR worker_cursor IS
+        SELECT WORKERID, SALARY FROM SALARIEDWORKER;
+    v_workerid SALARIEDWORKER.WORKERID%TYPE;
+    v_salary SALARIEDWORKER.SALARY%TYPE;
+    v_tax SALARIEDWORKER.TAX%TYPE;
+BEGIN
+    OPEN worker_cursor;
+    LOOP
+        FETCH worker_cursor INTO v_workerid, v_salary;
+        EXIT WHEN worker_cursor%NOTFOUND;
+        
+        -- Calculate tax based on salary
+        IF v_salary <= 5000 THEN
+            v_tax := 0;
+        ELSIF v_salary <= 8000 THEN
+            v_tax := v_salary * 0.05;
+        ELSIF v_salary <= 10000 THEN
+            v_tax := v_salary * 0.10;
+        ELSE
+            v_tax := v_salary * 0.15;
+        END IF;
+        
+        -- Update the tax in the SALARIEDWORKER table
+        UPDATE SALARIEDWORKER
+        SET TAX = v_tax
+        WHERE WORKERID = v_workerid;
+    END LOOP;
+    CLOSE worker_cursor;
+    
+    COMMIT; -- Save the changes
+END;
+/
+b) Trigger to Record Retired Worker’s Pension Details
+Requirements:
+
+Whenever a salaried worker retires (RETIRES changes to Y), insert a record into the PENSION table.
+The PENSION table should contain WORKERID and PENSIONAMOUNT.
+PENSIONAMOUNT is calculated as half of the worker's SALARY.
+Algorithm for the Trigger:
+
+Define an AFTER UPDATE trigger on the SALARIEDWORKER table, as it needs to react to changes in the RETIRES field.
+In the trigger, check if:
+The RETIRES field changes from N to Y.
+If the condition is met:
+Calculate PENSIONAMOUNT as half of the SALARY.
+Insert a new record into the PENSION table with WORKERID and the calculated PENSIONAMOUNT.
+PL/SQL Trigger Code:
+
+sql
+Copy code
+CREATE OR REPLACE TRIGGER record_pension
+AFTER UPDATE OF RETIRES ON SALARIEDWORKER
+FOR EACH ROW
+BEGIN
+    -- Check if RETIRES changed from 'N' to 'Y'
+    IF :OLD.RETIRES = 'N' AND :NEW.RETIRES = 'Y' THEN
+        -- Calculate pension amount as half of the salary
+        INSERT INTO PENSION (WORKERID, PENSIONAMOUNT)
+        VALUES (:NEW.WORKERID, :NEW.SALARY / 2);
+    END IF;
+END;
+/
