@@ -1,0 +1,106 @@
+Based on the provided question, here are the SQL queries and PL/SQL program solutions for each part:
+
+### Schema Setup
+Create the necessary tables as described:
+
+sql
+CREATE TABLE dept (
+    deptno INT PRIMARY KEY,
+    dname VARCHAR(50),
+    loc VARCHAR(50)
+);
+
+CREATE TABLE emp (
+    empno INT PRIMARY KEY,
+    ename VARCHAR(50),
+    job VARCHAR(50),
+    mgr INT,
+    hiredate DATE,
+    sal DECIMAL(10, 2),
+    comm DECIMAL(10, 2),
+    deptno INT,
+    FOREIGN KEY (deptno) REFERENCES dept(deptno)
+);
+
+
+### Queries
+
+#### (a) List the employee whose salary is between 50,000 to 1,00,000.
+
+sql
+SELECT ename, sal
+FROM emp
+WHERE sal BETWEEN 50000 AND 100000;
+
+
+#### (b) List the employee names and their annual salary department-wise.
+
+sql
+SELECT d.dname AS department, e.ename AS employee_name, (e.sal * 12) AS annual_salary
+FROM emp e
+JOIN dept d ON e.deptno = d.deptno
+ORDER BY d.dname;
+
+
+#### (c) List the employees whose salary is less than their manager’s but more than other managers.
+
+This query assumes that managers are also listed in the emp table, and we compare salaries based on manager-subordinate relationships.
+
+sql
+SELECT e1.ename AS employee, e1.sal AS employee_salary, e2.ename AS manager, e2.sal AS manager_salary
+FROM emp e1
+JOIN emp e2 ON e1.mgr = e2.empno
+WHERE e1.sal < e2.sal
+AND e1.sal > ALL (
+    SELECT sal
+    FROM emp
+    WHERE job = 'Manager' AND empno != e2.empno
+);
+
+
+#### (d) List the department number, name, job, salary, and salary + commission of the salesmen.
+
+sql
+SELECT e.deptno, e.ename, e.job, e.sal, (e.sal + COALESCE(e.comm, 0)) AS total_salary
+FROM emp e
+WHERE e.job = 'Salesman';
+
+
+### (e) PL/SQL Program to find the total marks of 5 subjects and search for a particular record given a Rollno.
+
+Assuming a student table with rollno as the primary key and five columns for marks in different subjects.
+
+sql
+CREATE TABLE student (
+    rollno INT PRIMARY KEY,
+    name VARCHAR(50),
+    subject1 INT,
+    subject2 INT,
+    subject3 INT,
+    subject4 INT,
+    subject5 INT
+);
+
+-- PL/SQL Procedure
+CREATE OR REPLACE PROCEDURE get_total_marks(p_rollno IN INT) IS
+    total_marks INT;
+BEGIN
+    SELECT (subject1 + subject2 + subject3 + subject4 + subject5) INTO total_marks
+    FROM student
+    WHERE rollno = p_rollno;
+    
+    DBMS_OUTPUT.PUT_LINE('Total Marks for Roll No ' || p_rollno || ' is: ' || total_marks);
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('No record found for Roll No ' || p_rollno);
+END;
+/
+
+-- Execute the procedure for a specific Rollno
+BEGIN
+    get_total_marks(101); -- Replace 101 with the desired Rollno
+END;
+/
+
+
+This procedure calculates and displays the total marks for a given roll number in the student table. Adjust the rollno in the execution block as needed.
