@@ -1,0 +1,196 @@
+CREATE TABLE PATIENTS (
+    PID INT PRIMARY KEY,
+    PNAME VARCHAR(100),
+    ADDRESS VARCHAR(200)
+);
+
+CREATE TABLE DETAILS (
+    PID INT,
+    DISEASE VARCHAR(100),
+    DOCTORNAME VARCHAR(100),
+    ADMITDATE DATE,
+    DISCHARGED CHAR(1) DEFAULT 'N',
+    AMTPAID DECIMAL(10, 2),
+    FOREIGN KEY (PID) REFERENCES PATIENTS(PID)
+);
+
+CREATE TABLE HISTORY (
+    PID INT,
+    PNAME VARCHAR(100),
+    ADDRESS VARCHAR(200),
+    DISEASE VARCHAR(100),
+    DOCTORNAME VARCHAR(100),
+    DISCHDATE DATE
+);
+...................................
+Step 2: Trigger to Prevent Discharge on Sunday
+sql
+Copy code:
+CREATE TRIGGER prevent_sunday_discharge
+BEFORE UPDATE ON DETAILS
+FOR EACH ROW
+BEGIN
+    IF NEW.DISCHARGED = 'Y' AND DAYOFWEEK(NEW.DISCHDATE) = 1 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Discharge not allowed on Sunday';
+    END IF;
+END;
+...................
+Step 3: Function to Update and Move Data on Discharge
+DELIMITER //
+
+CREATE PROCEDURE handle_discharge(IN p_PID INT, IN p_DISCHDATE DATE)
+BEGIN
+    DECLARE v_AMTPAID DECIMAL(10, 2);
+    
+    -- Calculate number of days between admit and discharge
+    SET v_AMTPAID = (DATEDIFF(p_DISCHDATE, (SELECT ADMITDATE FROM DETAILS WHERE PID = p_PID)) + 1) * 1000;
+
+    -- Update DETAILS table with discharge information
+    UPDATE DETAILS
+    SET DISCHARGED = 'Y', DISCHDATE = p_DISCHDATE, AMTPAID = v_AMTPAID
+    WHERE PID = p_PID;
+    
+    -- Move the patient details to the HISTORY table
+    INSERT INTO HISTORY (PID, PNAME, ADDRESS, DISEASE, DOCTORNAME, DISCHDATE)
+    SELECT p.PID, p.PNAME, p.ADDRESS, d.DISEASE, d.DOCTORNAME, p_DISCHDATE
+    FROM PATIENTS p
+    JOIN DETAILS d ON p.PID = d.PID
+    WHERE p.PID = p_PID;
+    
+    -- Optionally, delete from DETAILS if it's no longer needed
+    DELETE FROM DETAILS WHERE PID = p_PID;
+END //
+
+DELIMITER ;
+....................................
+Step 4: Query to List Patients by Doctor
+sql
+Copy code:
+SELECT DOCTORNAME, COUNT(PID) AS PatientCount, GROUP_CONCAT(PNAME) AS PatientNames
+FROM DETAILS
+GROUP BY DOCTORNAME;
+.............................\
+Step 5: Query to List Patients with Similar Disease
+sql
+Copy code:
+SELECT DISEASE, COUNT(PID) AS PatientCount
+FROM DETAILS
+GROUP BY DISEASE
+HAVING COUNT(PID) > 1;
+...........................
+..............................
+ALGO
+
+1. Algorithm to Create Tables (PATIENTS, DETAILS, HISTORY)
+Objective: Define three tables to store patient, treatment, and history information.
+
+Steps:
+
+Create the PATIENTS table:
+
+Define columns:
+PID as a primary key (integer).
+PNAME for the patient's name (string).
+ADDRESS for the patient's address (string).
+Execute the SQL statement to create this table.
+Create the DETAILS table:
+
+Define columns:
+PID (integer), which references PATIENTS(PID).
+DISEASE for the disease name (string).
+DOCTORNAME for the doctor's name (string).
+ADMITDATE as the admission date (date).
+DISCHARGED as a character (Y/N) to indicate discharge status, defaulting to 'N'.
+AMTPAID as a decimal to store the amount paid.
+Establish a foreign key relationship with the PATIENTS table using PID.
+Execute the SQL statement to create this table.
+Create the HISTORY table:
+
+Define columns:
+PID (integer).
+PNAME for patient name (string).
+ADDRESS for patient address (string).
+DISEASE for the disease (string).
+DOCTORNAME for the doctor’s name (string).
+DISCHDATE as the discharge date (date).
+Execute the SQL statement to create this table.
+2. Algorithm for Trigger to Prevent Discharge on Sunday
+Objective: Ensure that patients cannot be discharged on Sundays by creating a trigger that checks the discharge date.
+
+Steps:
+
+Define a trigger named prevent_sunday_discharge that runs before updating the DETAILS table.
+For each row that is updated:
+Check if DISCHARGED is set to 'Y'.
+If DISCHARGED is 'Y', retrieve the discharge date (DISCHDATE).
+Check the day of the week for DISCHDATE.
+If DISCHDATE is a Sunday, raise an error to prevent the update.
+Otherwise, allow the update to proceed.
+Execute the trigger creation SQL statement.
+3. Algorithm for Function to Update Details and Move Data to History
+Objective: When a patient is discharged, update the DETAILS table, calculate the AMTPAID, and move the record to HISTORY.
+
+Steps:
+
+Define a stored procedure handle_discharge with parameters:
+
+p_PID (Patient ID).
+p_DISCHDATE (Discharge Date).
+Retrieve the ADMITDATE from the DETAILS table for the patient with ID p_PID.
+
+Calculate the number of days between ADMITDATE and p_DISCHDATE:
+
+Days = DATEDIFF(p_DISCHDATE, ADMITDATE) + 1.
+Calculate AMTPAID as Days * 1000.
+Update the DETAILS table:
+
+Set DISCHARGED to 'Y'.
+Set DISCHDATE to p_DISCHDATE.
+Set AMTPAID to the calculated amount.
+Use p_PID to locate the correct record in DETAILS.
+Insert the record into the HISTORY table:
+
+Copy patient details (PID, PNAME, ADDRESS, DISEASE, DOCTORNAME, and p_DISCHDATE).
+(Optional) Delete the record from the DETAILS table to archive the patient's details only in HISTORY.
+
+Execute the stored procedure creation SQL statement.
+
+4. Algorithm for Query to List Patients by Doctor
+Objective: List the number of patients each doctor is treating, along with patient names.
+
+Steps:
+
+Group data from the DETAILS table by DOCTORNAME.
+For each doctor:
+Count the number of patients (PID).
+Retrieve and concatenate patient names (PNAME).
+Display the results with columns for DOCTORNAME, PatientCount, and PatientNames.
+SQL Query:
+
+sql
+Copy code
+SELECT DOCTORNAME, COUNT(PID) AS PatientCount, GROUP_CONCAT(PNAME) AS PatientNames
+FROM DETAILS
+GROUP BY DOCTORNAME;
+5. Algorithm for Query to List Patients with Similar Disease
+Objective: Find and list the count of patients who have the same disease.
+
+Steps:
+
+Group data from the DETAILS table by DISEASE.
+For each disease:
+Count the number of patients (PID).
+If the count is greater than 1, include this disease in the result set.
+Display the results with columns for DISEASE and PatientCount.
+SQL Query:
+
+sql
+Copy code
+SELECT DISEASE, COUNT(PID) AS PatientCount
+FROM DETAILS
+GROUP BY DISEASE
+HAVING COUNT(PID) > 1;
+These algorithms outline the logic and steps required to implement each answer in SQL. By following these steps, you can construct each query, function, and trigger as required by the question set.
+
+.........................................................
