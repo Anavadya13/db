@@ -198,3 +198,71 @@ BEGIN
         -- No action needed; insertion is allowed
     END IF;
 END;
+............................................
+ALGO
+Question 1: Create a staff Table with Specific Constraints
+Objective: Create a staff table with fields staff_name, staff_id, department, and age, with specific constraints.
+
+Algorithm:
+
+Start defining a new table called staff.
+Add a column called staff_id:
+Set its data type as INT.
+Designate it as the primary key (ensures each staff_id is unique).
+Add a column called staff_name:
+Set its data type as VARCHAR with a maximum length of 50.
+Add a NOT NULL constraint to ensure this field is always populated.
+Add a column called department:
+Set its data type as VARCHAR with a maximum length of 50.
+Add a NOT NULL constraint to ensure this field is always populated.
+Add a column called age:
+Set its data type as INT.
+Add a NOT NULL constraint to ensure this field is always populated.
+Add a CHECK constraint to ensure age is greater than 25 and less than 75.
+Complete the table definition with all the specified constraints.
+Question 2a: Display All Staff Names and Departments for Staff Belonging to EC or ME Departments
+Objective: Retrieve the names and departments of all staff members in the EC or ME departments.
+
+Algorithm:
+
+Select the columns staff_name and department from the staff table.
+Use a condition to filter the rows where department is either "EC" or "ME".
+Use the IN clause to specify multiple department values.
+Execute the query to retrieve the filtered data.
+Question 2b: Display All Staff Names Matching the Pattern "ab…dc"
+Objective: Retrieve names of staff members that match a specific pattern: starting with "ab" and ending with "dc" (with any number of characters in between).
+
+Algorithm:
+
+Select the staff_name column from the staff table.
+Use a LIKE condition to specify the pattern:
+The name should start with "ab" and end with "dc".
+Use the % wildcard to represent any characters in between.
+Execute the query to retrieve names matching the specified pattern.
+Question 2c: List All Staff Details in Alphabetical Order Within a Particular Department
+Objective: Retrieve all details of staff members, ordered alphabetically by their names within a specified department.
+
+Algorithm:
+
+Select all columns from the staff table.
+Use a WHERE condition to filter the rows for a specified department.
+Replace "Specific_Department" with the actual department name when executing.
+Use an ORDER BY clause on staff_name to arrange the rows in alphabetical order.
+Execute the query to retrieve the ordered data for the specified department.
+Question 3: Create a Trigger to Handle Conditional Insertions
+Objective: Implement a trigger that blocks or allows insertion based on specific conditions.
+
+Algorithm:
+
+Define a BEFORE INSERT trigger on the staff table, which will activate before each insertion.
+In the trigger definition, add conditional checks to determine whether to allow or block an insertion:
+Condition 1: If age is below 30 and department is "HR":
+Block the insertion by raising an error message stating "Insertion blocked: Age is below 30 and department is HR."
+Condition 2: If staff_name starts with "Z" and department is "IT":
+Block the insertion by raising an error message stating "Insertion blocked: Name starts with Z and department is IT."
+Condition 3: If department is "Finance" and age is between 35 and 50 (inclusive):
+Allow the insertion without taking any action.
+Condition 4: In all other cases:
+Allow the insertion without taking any action.
+Define the SIGNAL SQLSTATE '45000' command in blocked cases to raise an error and halt the insertion.
+Execute the trigger creation command.
