@@ -1,0 +1,110 @@
+Based on the image you provided, here is a solution outline for the SQL tasks.
+
+### Table Creation
+
+sql
+CREATE TABLE ADMIS (
+    BRANCH VARCHAR(50),
+    SID INT PRIMARY KEY,
+    SNAME VARCHAR(50),
+    MATHS INT,
+    PHY INT,
+    CHEM INT,
+    TOT INT
+);
+
+CREATE TABLE SEATPOSITION (
+    DNAME VARCHAR(50),
+    TOTALSEATS INT,
+    ADMITTED INT DEFAULT 0,
+    VACANCY INT
+);
+
+
+### Part (a): Stored Procedure for Insert, Delete, and Update Operations
+
+This procedure can handle insert, delete, and update operations on the ADMIS table.
+
+sql
+DELIMITER //
+
+CREATE PROCEDURE ManageAdmission(
+    IN operation VARCHAR(10),
+    IN sid INT,
+    IN branch VARCHAR(50),
+    IN sname VARCHAR(50),
+    IN maths INT,
+    IN phy INT,
+    IN chem INT,
+    IN tot INT
+)
+BEGIN
+    IF operation = 'INSERT' THEN
+        INSERT INTO ADMIS (BRANCH, SID, SNAME, MATHS, PHY, CHEM, TOT)
+        VALUES (branch, sid, sname, maths, phy, chem, tot);
+
+    ELSEIF operation = 'DELETE' THEN
+        DELETE FROM ADMIS WHERE SID = sid;
+
+    ELSEIF operation = 'UPDATE' THEN
+        UPDATE ADMIS
+        SET BRANCH = branch, SNAME = sname, MATHS = maths, PHY = phy, CHEM = chem, TOT = tot
+        WHERE SID = sid;
+
+    END IF;
+END //
+
+DELIMITER ;
+
+
+### Part (b): Trigger to Implement Admission Process
+
+This trigger updates the SEATPOSITION table whenever a new record is inserted into the ADMIS table, to keep track of the number of admitted students and vacancies.
+
+sql
+DELIMITER //
+
+CREATE TRIGGER AfterAdmissionInsert
+AFTER INSERT ON ADMIS
+FOR EACH ROW
+BEGIN
+    DECLARE department_name VARCHAR(50);
+
+    SET department_name = NEW.BRANCH;
+
+    UPDATE SEATPOSITION
+    SET ADMITTED = ADMITTED + 1,
+        VACANCY = TOTALSEATS - ADMITTED
+    WHERE DNAME = department_name;
+END //
+
+DELIMITER ;
+
+
+### Additional Requirements
+
+1. *Close Admission after a Specific Date*
+
+   To close admissions after 2023-12-14, you could add a condition in the stored procedure or as a separate trigger that checks the current date before allowing new admissions.
+
+   sql
+   DELIMITER //
+
+   CREATE TRIGGER CloseAdmissionAfterDate
+   BEFORE INSERT ON ADMIS
+   FOR EACH ROW
+   BEGIN
+       IF CURDATE() > '2023-12-14' THEN
+           SIGNAL SQLSTATE '45000' 
+           SET MESSAGE_TEXT = 'Admissions are closed for this year';
+       END IF;
+   END //
+
+   DELIMITER ;
+   
+
+2. *Updating Seat Information on Insert/Update/Delete*
+
+   You can add additional triggers for UPDATE and DELETE operations to adjust the SEATPOSITION table accordingly, similar to the AfterAdmissionInsert trigger.
+
+This setup should fulfill the requirements specified in your assignment. Let me know if you need any further assistance!
