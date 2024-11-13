@@ -51,3 +51,95 @@ JOIN (
 
 
 These queries should fulfill each part of the question. Let me know if you need further assistance!
+........................
+ALGO
+Query (a): Find the employee name and their salaries who work in companies located in “New York”.
+Objective: Retrieve the names and salaries of employees working in companies based in New York.
+
+Algorithm
+Join Employee, Works, and Company tables:
+
+Use the eno field to join Employee and Works (to link employees with the companies they work for).
+Use the company-name field to join Works and Company (to retrieve company details).
+Filter by Company Location:
+
+In the WHERE clause, specify city = 'New York' to include only companies based in New York.
+Select Required Columns:
+
+Select employee_name and salary from the Employee table.
+SQL Query
+sql
+Copy code
+SELECT e.employee_name, e.salary
+FROM employee e
+JOIN works w ON e.eno = w.eno
+JOIN company c ON w.company_name = c.company_name
+WHERE c.city = 'New York';
+Query (b): Find all employees who earn more than each employee in the ‘TWIN BIRDS’ company.
+Objective: Retrieve the names of employees who earn a salary greater than all employees working at "TWIN BIRDS".
+
+Algorithm
+Subquery for Salaries in ‘TWIN BIRDS’:
+
+Create a subquery that selects the salary of each employee working in "TWIN BIRDS" (filter company_name = 'TWIN BIRDS' in the Works table).
+Filter Employees by Salary:
+
+In the main query, retrieve employees from the Employee table whose salary is greater than all the salaries returned by the subquery.
+Select Employee Names:
+
+Select only the employee_name from the Employee table for those who meet the criteria.
+SQL Query
+sql
+Copy code
+SELECT e.employee_name
+FROM employee e
+WHERE e.salary > ALL (
+    SELECT w.salary
+    FROM works w
+    WHERE w.company_name = 'TWIN BIRDS'
+);
+Query (c): Find all employees who live in the same cities as their managers.
+Objective: Retrieve the names of employees who live in the same city as their managers.
+
+Algorithm
+Self-Join on the Employee Table:
+
+Join the Employee table with itself (Employee e and Employee m) to link each employee with their manager.
+Use e.Mgrno = m.eno to ensure Mgrno from the employee record matches the eno of the manager record.
+Filter by City:
+
+In the WHERE clause, specify e.city = m.city to include only those employees who live in the same city as their manager.
+Select Employee Names:
+
+Select employee_name from the Employee table (e alias) for employees who meet the criteria.
+SQL Query
+sql
+Copy code
+SELECT e.employee_name
+FROM employee e
+JOIN employee m ON e.Mgrno = m.eno
+WHERE e.city = m.city;
+Query (d): Find the employee names who have the highest salary within each city. Display city, employee name, and their salary.
+Objective: Retrieve the city, name, and salary of employees who have the highest salary in their respective cities.
+
+Algorithm
+Subquery to Find Maximum Salary per City:
+
+Create a subquery that selects the maximum salary for each city from the Employee table.
+Use GROUP BY city to get the maximum salary per city.
+Join with the Employee Table:
+
+Join the Employee table (e) with the subquery (max_salaries) using e.city = max_salaries.city and e.salary = max_salaries.max_salary to match the employees who have the highest salary in their city.
+Select Required Columns:
+
+Select city, employee_name, and salary from the Employee table (e alias) for those who meet the criteria.
+SQL Query
+sql
+Copy code
+SELECT e.city, e.employee_name, e.salary
+FROM employee e
+JOIN (
+    SELECT city, MAX(salary) AS max_salary
+    FROM employee
+    GROUP BY city
+) AS max_salaries ON e.city = max_salaries.city AND e.salary = max_salaries.max_salary;
