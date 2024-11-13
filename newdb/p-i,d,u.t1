@@ -108,3 +108,111 @@ DELIMITER ;
    You can add additional triggers for UPDATE and DELETE operations to adjust the SEATPOSITION table accordingly, similar to the AfterAdmissionInsert trigger.
 
 This setup should fulfill the requirements specified in your assignment. Let me know if you need any further assistance!
+
+
+............................
+..........................
+ALGO
+Table Creation Algorithm
+Objective: Define two tables, ADMIS and SEATPOSITION, to store student admission data and seat availability for each department.
+
+Algorithm for Table Creation
+Create ADMIS Table:
+
+Define columns:
+BRANCH (VARCHAR): The department name.
+SID (INT, Primary Key): Unique student ID.
+SNAME (VARCHAR): Student's name.
+MATHS, PHY, CHEM (INT): Marks for subjects.
+TOT (INT): Total marks.
+Execute the SQL statement to create the ADMIS table.
+Create SEATPOSITION Table:
+
+Define columns:
+DNAME (VARCHAR): Department name.
+TOTALSEATS (INT): Total seats available in the department.
+ADMITTED (INT, default 0): Number of students admitted.
+VACANCY (INT): Seats still available (calculated dynamically).
+Execute the SQL statement to create the SEATPOSITION table.
+Part (a): Algorithm for Stored Procedure ManageAdmission
+Objective: Create a stored procedure ManageAdmission to handle Insert, Delete, and Update operations in the ADMIS table.
+
+Algorithm for Stored Procedure
+Define Procedure Parameters:
+
+Accept input parameters for:
+operation (VARCHAR): Specifies the action (INSERT, DELETE, or UPDATE).
+sid, branch, sname, maths, phy, chem, tot (relevant fields for ADMIS table).
+Check Operation Type:
+
+If operation is 'INSERT':
+Execute INSERT INTO ADMIS with the provided data for student admission.
+If operation is 'DELETE':
+Execute DELETE FROM ADMIS WHERE SID = sid to remove the specified student.
+If operation is 'UPDATE':
+Execute UPDATE ADMIS to modify the student details based on sid.
+Set BRANCH, SNAME, MATHS, PHY, CHEM, and TOT to the provided values.
+End Procedure:
+
+Execute the stored procedure creation SQL statement to define ManageAdmission.
+Part (b): Algorithm for Trigger AfterAdmissionInsert
+Objective: Update the SEATPOSITION table to reflect admitted students and vacancies whenever a new record is inserted into the ADMIS table.
+
+Algorithm for Trigger
+Define Trigger:
+
+Set up AfterAdmissionInsert as an AFTER INSERT trigger on the ADMIS table.
+Declare Local Variables:
+
+Define a variable department_name to store the BRANCH value from the new admission record.
+Set Department Name:
+
+Set department_name to NEW.BRANCH (value from the inserted record).
+Update Seat Count in SEATPOSITION:
+
+Execute UPDATE SEATPOSITION:
+Increment ADMITTED by 1 for the relevant department (DNAME = department_name).
+Recalculate VACANCY as TOTALSEATS - ADMITTED.
+End Trigger:
+
+Execute the trigger creation SQL statement.
+Additional Requirements
+1. Algorithm for Trigger to Close Admission After a Specific Date
+Objective: Prevent new admissions after the date 2023-12-14.
+
+Algorithm for Date-Based Admission Closure Trigger
+Define Trigger:
+
+Set up a trigger CloseAdmissionAfterDate as a BEFORE INSERT trigger on the ADMIS table.
+Check Current Date:
+
+In the trigger body, compare the current date (CURDATE()) to the cutoff date (2023-12-14).
+Conditionally Block Admission:
+
+If CURDATE() is later than 2023-12-14, raise an error using:
+SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Admissions are closed for this year'.
+Allow Admission if Within Date:
+
+If the current date is before 2023-12-14, allow the insertion to proceed normally.
+End Trigger:
+
+Execute the trigger creation SQL statement.
+2. Algorithm for Additional Triggers to Adjust Seat Information on Insert, Update, and Delete
+Objective: Ensure the SEATPOSITION table is kept up-to-date when records in ADMIS are inserted, updated, or deleted.
+
+Algorithm for Each Trigger
+Trigger for Admission Insert (Already covered in AfterAdmissionInsert):
+
+Increment ADMITTED by 1 and update VACANCY after each insertion.
+Trigger for Admission Update:
+
+Set up AFTER UPDATE trigger on ADMIS to handle changes to BRANCH.
+Check if the BRANCH of a student was modified:
+If BRANCH is changed, adjust the ADMITTED and VACANCY counts for both the old and new departments accordingly.
+Recalculate VACANCY in both departments (old and new branch) as TOTALSEATS - ADMITTED.
+Trigger for Admission Delete:
+
+Set up AFTER DELETE trigger on ADMIS to decrement ADMITTED in SEATPOSITION when a student is removed.
+Identify the department (BRANCH) of the deleted student.
+Decrement ADMITTED by 1 for the corresponding department.
+Recalculate VACANCY as TOTALSEATS - ADMITTED for the affected department.
