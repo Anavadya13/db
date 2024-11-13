@@ -1,0 +1,200 @@
+1. Table Creation
+Create a staff table with the following constraints:
+
+Fields: staff_name, staff_id, department, age.
+staff_id is the primary key.
+age should be greater than 25 and less than 75.
+All fields should be NOT NULL.
+sql
+Copy code
+CREATE TABLE staff (
+    staff_id INT PRIMARY KEY,
+    staff_name VARCHAR(50) NOT NULL,
+    department VARCHAR(50) NOT NULL,
+    age INT CHECK (age > 25 AND age < 75) NOT NULL
+);
+2. Queries
+a. Display all staff name and department who belong to EC or ME
+sql
+Copy code
+SELECT staff_name, department
+FROM staff
+WHERE department IN ('EC', 'ME');
+b. Display all staff names whose names match with "ab…dc"
+Assuming "ab…dc" means names starting with "ab" and ending with "dc", with any characters in between.
+
+sql
+Copy code
+SELECT staff_name
+FROM staff
+WHERE staff_name LIKE 'ab%dc';
+c. List details of all staff in alphabetical order within a particular department
+Assuming we prompt for the department during query execution:
+
+sql
+Copy code
+SELECT *
+FROM staff
+WHERE department = 'Specific_Department' -- replace with desired department
+ORDER BY staff_name ASC;
+3. Trigger Creation
+Create a trigger to handle specific insertion conditions:
+
+Block insertion if:
+Age is below 30 and department is HR.
+Name starts with "Z" and department is IT.
+Allow insertion if:
+Department is Finance and age is between 35 and 50 (inclusive).
+Allow insertion otherwise.
+sql
+Copy code
+CREATE TRIGGER staff_insert_trigger
+BEFORE INSERT ON staff
+FOR EACH ROW
+BEGIN
+    -- Condition 1: Block if age < 30 and department is 'HR'
+    IF NEW.age < 30 AND NEW.department = 'HR' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insertion blocked: Age is below 30 and department is HR.';
+    
+    -- Condition 2: Block if name starts with 'Z' and department is 'IT'
+    ELSIF NEW.staff_name LIKE 'Z%' AND NEW.department = 'IT' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insertion blocked: Name starts with Z and department is IT.';
+    
+    -- Condition 3: Allow if department is 'Finance' and age is between 35 and 50 (inclusive)
+    ELSIF NEW.department = 'Finance' AND NEW.age BETWEEN 35 AND 50 THEN
+        -- No action needed; insertion is allowed
+    
+    -- Condition 4: Default case, allow insertion
+    ELSE
+        -- No action needed; insertion is allowed
+    END IF;
+END;
+This setup covers all the requirements specified in the document.
+
+
+
+
+
+
+You said:
+generate algorithm for each answer
+ChatGPT said:
+ChatGPT
+Here’s an algorithmic breakdown for each part of the SQL assignment, explaining the steps that lead to each SQL command.
+
+1. Algorithm to Create the staff Table
+Objective: Create a staff table with specific fields and constraints.
+
+Algorithm:
+
+Define a table named staff.
+Add a column staff_id:
+Set its type to INT.
+Make it the primary key.
+Add a column staff_name:
+Set its type to VARCHAR with a length of 50.
+Make it NOT NULL.
+Add a column department:
+Set its type to VARCHAR with a length of 50.
+Make it NOT NULL.
+Add a column age:
+Set its type to INT.
+Make it NOT NULL.
+Add a check constraint that ensures age is greater than 25 and less than 75.
+SQL Code:
+
+sql
+Copy code
+CREATE TABLE staff (
+    staff_id INT PRIMARY KEY,
+    staff_name VARCHAR(50) NOT NULL,
+    department VARCHAR(50) NOT NULL,
+    age INT CHECK (age > 25 AND age < 75) NOT NULL
+);
+2. Algorithms for Each Query
+a. Display all staff name and department who belong to EC or ME
+Objective: Select the staff_name and department of all staff in the EC or ME department.
+
+Algorithm:
+
+Select staff_name and department from the staff table.
+Filter the results to only include rows where the department is EC or ME.
+SQL Code:
+
+sql
+Copy code
+SELECT staff_name, department
+FROM staff
+WHERE department IN ('EC', 'ME');
+b. Display all staff names matching "ab…dc" pattern
+Objective: Select staff_name values that start with "ab" and end with "dc", with any characters in between.
+
+Algorithm:
+
+Select staff_name from the staff table.
+Filter names using a pattern that:
+Starts with "ab".
+Has any number of characters in between.
+Ends with "dc".
+SQL Code:
+
+sql
+Copy code
+SELECT staff_name
+FROM staff
+WHERE staff_name LIKE 'ab%dc';
+c. List details of all staff in alphabetical order within a particular department
+Objective: List all staff details in alphabetical order, filtered by a specific department.
+
+Algorithm:
+
+Select all columns from the staff table.
+Filter the results to only include rows where department matches a specified value.
+Sort the results by staff_name in ascending order.
+SQL Code:
+
+sql
+Copy code
+SELECT *
+FROM staff
+WHERE department = 'Specific_Department' -- replace with desired department
+ORDER BY staff_name ASC;
+3. Algorithm to Create the Trigger for Conditional Insertion
+Objective: Create a trigger that blocks or allows insertion based on certain conditions.
+
+Algorithm:
+
+Define a trigger staff_insert_trigger that activates before an insert operation on the staff table.
+For each insertion:
+Condition 1: Check if age is below 30 and department is "HR".
+If true, raise an error and block the insertion.
+Condition 2: Check if staff_name starts with "Z" and department is "IT".
+If true, raise an error and block the insertion.
+Condition 3: Check if department is "Finance" and age is between 35 and 50 (inclusive).
+If true, allow the insertion without any action.
+Condition 4: For all other cases, allow the insertion without any action.
+SQL Code:
+
+sql
+Copy code
+CREATE TRIGGER staff_insert_trigger
+BEFORE INSERT ON staff
+FOR EACH ROW
+BEGIN
+    -- Condition 1: Block if age < 30 and department is 'HR'
+    IF NEW.age < 30 AND NEW.department = 'HR' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insertion blocked: Age is below 30 and department is HR.';
+    
+    -- Condition 2: Block if name starts with 'Z' and department is 'IT'
+    ELSIF NEW.staff_name LIKE 'Z%' AND NEW.department = 'IT' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Insertion blocked: Name starts with Z and department is IT.';
+    
+    -- Condition 3: Allow if department is 'Finance' and age is between 35 and 50 (inclusive)
+    ELSIF NEW.department = 'Finance' AND NEW.age BETWEEN 35 AND 50 THEN
+        -- No action needed; insertion is allowed
+    
+    -- Condition 4: Default case, allow insertion
+    ELSE
+        -- No action needed; insertion is allowed
+    END IF;
+END;
