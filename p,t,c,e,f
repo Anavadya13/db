@@ -1,0 +1,117 @@
+p.................
+-- Creating a procedure that inserts a new worker into the Workers table
+CREATE OR REPLACE PROCEDURE add_worker (
+  p_Sid IN INT,
+  p_AGE IN INT
+) IS
+BEGIN
+  -- Inserting data into the Workers table
+  INSERT INTO Workers (Sid, AGE)
+  VALUES (p_Sid, p_AGE);
+  
+  -- Committing the transaction (if required)
+  COMMIT;
+  
+  -- Optional: Display a message
+  DBMS_OUTPUT.PUT_LINE('Worker added with Sid = ' || p_Sid || ' and AGE = ' || p_AGE);
+END add_worker;
+
+...................t
+-- Creating a trigger to log every insertion into Workers table
+CREATE OR REPLACE TRIGGER log_worker_insert
+AFTER INSERT ON Workers
+FOR EACH ROW
+BEGIN
+  -- Inserting a record into the Workers_Audit table
+  INSERT INTO Workers_Audit (Sid, AGE, action, action_date)
+  VALUES (:NEW.Sid, :NEW.AGE, 'INSERT', SYSDATE);
+  
+  -- Optional: Output a message (for debugging)
+  DBMS_OUTPUT.PUT_LINE('Inserted worker with Sid = ' || :NEW.Sid);
+END log_worker_insert;
+.............................c
+DECLARE
+    -- Declare the cursor
+    CURSOR employee_cursor IS
+        SELECT employee_id, first_name, last_name
+        FROM employees;
+    
+    -- Declare variables to store the fetched values
+    v_employee_id employees.employee_id%TYPE;
+    v_first_name employees.first_name%TYPE;
+    v_last_name employees.last_name%TYPE;
+BEGIN
+    -- Open the cursor
+    OPEN employee_cursor;
+    
+    -- Fetch rows from the cursor
+    LOOP
+        FETCH employee_cursor INTO v_employee_id, v_first_name, v_last_name;
+        
+        -- Exit the loop when no more rows are available
+        EXIT WHEN employee_cursor%NOTFOUND;
+        
+        -- Display the fetched data
+        DBMS_OUTPUT.PUT_LINE('Employee ID: ' || v_employee_id || ', Name: ' || v_first_name || ' ' || v_last_name);
+    END LOOP;
+    
+    -- Close the cursor
+    CLOSE employee_cursor;
+END;
+................................eDECLARE
+    -- Declare variables
+    v_employee_id employees.employee_id%TYPE := 101;
+    v_salary employees.salary%TYPE;
+BEGIN
+    -- Attempt to retrieve employee salary
+    SELECT salary
+    INTO v_salary
+    FROM employees
+    WHERE employee_id = v_employee_id;
+    
+    -- Simulate a division by zero
+    DECLARE
+        v_result NUMBER;
+    BEGIN
+        v_result := v_salary / 0;  -- This will cause a division by zero exception
+    EXCEPTION
+        WHEN ZERO_DIVIDE THEN
+            DBMS_OUTPUT.PUT_LINE('Error: Division by zero occurred!');
+    END;
+    
+    -- Handle other potential exceptions
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('Error: No data found for employee ID ' || v_employee_id);
+        WHEN TOO_MANY_ROWS THEN
+            DBMS_OUTPUT.PUT_LINE('Error: More than one employee found for ID ' || v_employee_id);
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Unexpected error: ' || SQLERRM);
+END;
+...................................f
+CREATE OR REPLACE FUNCTION calculate_annual_salary (p_employee_id IN NUMBER) 
+RETURN NUMBER
+IS
+    v_monthly_salary employees.salary%TYPE;
+    v_annual_salary NUMBER;
+BEGIN
+    -- Retrieve the monthly salary for the given employee ID
+    SELECT salary
+    INTO v_monthly_salary
+    FROM employees
+    WHERE employee_id = p_employee_id;
+
+    -- Calculate the annual salary
+    v_annual_salary := v_monthly_salary * 12;
+
+    -- Return the annual salary
+    RETURN v_annual_salary;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('Error: No data found for employee ID ' || p_employee_id);
+        RETURN NULL;
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Unexpected error: ' || SQLERRM);
+        RETURN NULL;
+END calculate_annual_salary;
+/
